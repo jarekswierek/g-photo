@@ -4,7 +4,10 @@ from . import models
 
 
 class PhotoAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    """Photos admin views.
+    """
+    list_display = ('thumb', 'name',)
+    readonly_fields = ('thumbnail',)
 
 
 admin.site.register(models.Photo, PhotoAdmin)
