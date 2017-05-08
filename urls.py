@@ -15,7 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from django.views.generic import RedirectView
+from django.core.urlresolvers import reverse_lazy
+
+photo_changelist = reverse_lazy('admin:photos_photo_changelist')
 
 urlpatterns = [
+    url(r'^admin/$', RedirectView.as_view(url=photo_changelist)),
     url(r'^admin/', admin.site.urls),
 ]

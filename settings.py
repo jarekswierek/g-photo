@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'photos'
 ]
 
 MIDDLEWARE = [
@@ -134,7 +135,7 @@ SUIT_CONFIG = {
 
     # menu
     'SEARCH_URL': '',
-    'MENU_EXCLUDE': ('auth',),
+    'MENU_EXCLUDE': ('auth', 'photos',),
     # 'MENU': (
     #     'sites',
     #     {'app': 'auth', 'icon':'icon-lock', 'models': ('user', 'group')},
