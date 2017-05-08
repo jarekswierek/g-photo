@@ -9,12 +9,3 @@ class Photo(models.Model):
 
     def __str__(self):
         return self.name
-
-    # def image_img(self):
-    #     """Thumbnail."""
-    #     if self.image:
-    #         return u'<img src="%s" />' % self.image.url_125x125
-    #     else:
-    #         return '(No photo)'
-    # image_img.short_description = 'Thumb'
-    # image_img.allow_tags = True

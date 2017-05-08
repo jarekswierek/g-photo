@@ -146,3 +146,6 @@ SUIT_CONFIG = {
     # misc
     'LIST_PER_PAGE': 15
 }
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
