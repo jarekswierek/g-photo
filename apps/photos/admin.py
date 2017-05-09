@@ -15,7 +15,7 @@ class PhotoAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         """Set update fields on photo edit.
         """
-        if obj:
+        if obj and obj.pk:
             self.fields = self.update_fields
         return super(PhotoAdmin, self).get_form(request, obj, **kwargs)
 

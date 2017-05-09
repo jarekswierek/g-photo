@@ -6,23 +6,24 @@ from io import BytesIO
 from PIL import Image
 from clarifai.rest import ClarifaiApp
 from clarifai.rest import Image as ClImage
+from clarifai.rest.client import ApiError
 
 from django.db import models
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 
-from .validators import validate_photo_extension
-from .exceptions import PhotoException
+from . import fields, validators, exceptions
 
 
 class Photo(models.Model):
     """Uploaded photo.
     """
     image = models.ImageField(
-        upload_to='photos', validators=[validate_photo_extension])
+        upload_to='photos', validators=[validators.validate_photo_extension])
     name = models.CharField(max_length=255)
     thumbnail = models.ImageField(
         upload_to='thumbs', max_length=500, blank=True, null=True)
+    concepts = fields.JSONField(blank=True, null=True)
 
     def image_tag(self):
         """Image tag.
@@ -60,7 +61,7 @@ class Photo(models.Model):
             pil_type = 'png'
             file_extension = 'png'
         else:
-            raise PhotoException('Content type of file not found.')
+            raise exceptions.PhotoException('Content type of file not found.')
 
         # Open original photo which we want to thumbnail using PIL's Image
         image = Image.open(BytesIO(self.image.read()))
@@ -88,9 +89,10 @@ class Photo(models.Model):
         """Save photo with thumbnail.
         """
         self.create_thumbnail()
+        self.set_photo_concepts()
         super(Photo, self).save()
 
-    def recognize_photo(self):
+    def vision(self):
         with open('api_keys.json') as data_file:
             credentials = json.load(data_file)
         app_id = credentials['api_key']
@@ -98,5 +100,24 @@ class Photo(models.Model):
         app = ClarifaiApp(app_id=app_id, app_secret=app_secret)
         model = app.models.get('general-v1.3')
         image = ClImage(file_obj=BytesIO(self.image.read()))
-        result = model.predict([image])
+        try:
+            result = model.predict([image])
+        except ApiError:
+            result = []
         return result
+
+    def set_photo_concepts(self):
+        result = self.vision()
+        try:
+            status_code = result['status']['code']
+        except KeyError:
+            pass
+        else:
+            if status_code == 10000:
+                try:
+                    concepts = result['outputs'][0]['data']['concepts']
+                except (KeyError, IndexError):
+                    concepts = []
+                concepts_list = [{'name': elem['name'], 'value': elem['value']}
+                                 for elem in concepts]
+                self.concepts = {'data': concepts_list}
