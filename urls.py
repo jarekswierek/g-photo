@@ -25,11 +25,5 @@ photo_changelist = reverse_lazy('admin:photos_photo_changelist')
 urlpatterns = [
     url(r'^$', RedirectView.as_view(url=photo_changelist)),
     url(r'^', admin.site.urls),
+    url(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT})
 ]
-
-if settings.DEBUG:
-    urlpatterns += [
-        url(r'^media/(?P<path>.*)$', serve, {
-            'document_root': settings.MEDIA_ROOT,
-        }),
-    ]

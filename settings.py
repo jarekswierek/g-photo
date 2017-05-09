@@ -15,6 +15,7 @@ import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+root = lambda *x: os.path.join(os.path.dirname(__file__), *x)
 
 
 # Quick-start development settings - unsuitable for production
@@ -140,7 +141,7 @@ SUIT_CONFIG = {
 }
 
 # media settings
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = root('media')
 MEDIA_URL = '/media/'
 
 # photo settings

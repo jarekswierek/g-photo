@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
+import json
 from io import BytesIO
 
 from PIL import Image
+from clarifai.rest import ClarifaiApp
+from clarifai.rest import Image as ClImage
 
 from django.db import models
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -75,3 +78,14 @@ class Photo(models.Model):
         """
         self.create_thumbnail()
         super(Photo, self).save()
+
+    def recognize_photo(self):
+        with open('api_keys.json') as data_file:
+            credentials = json.load(data_file)
+        app_id = credentials['api_key']
+        app_secret = credentials['api_secret']
+        app = ClarifaiApp(app_id=app_id, app_secret=app_secret)
+        model = app.models.get('general-v1.3')
+        image = ClImage(file_obj=BytesIO(self.image.read()))
+        result = model.predict([image])
+        return result

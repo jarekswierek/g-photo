@@ -90,4 +90,5 @@ ENV/
 
 # custom
 .idea
-media/photos
+media
+api_keys.json
