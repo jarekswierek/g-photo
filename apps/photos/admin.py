@@ -8,9 +8,9 @@ class PhotoAdmin(admin.ModelAdmin):
     """Photos admin views.
     """
     list_display = ('thumb_tag', 'name',)
-    readonly_fields = ('image_tag',)
+    readonly_fields = ('image_tag', 'concepts_chart')
     fields = ('name', 'image')
-    update_fields = ('image_tag', 'name', 'image')
+    update_fields = ('image_tag', 'name', 'image', 'concepts_chart')
 
     def get_form(self, request, obj=None, **kwargs):
         """Set update fields on photo edit.

@@ -7,6 +7,8 @@ from PIL import Image
 from clarifai.rest import ClarifaiApp
 from clarifai.rest import Image as ClImage
 from clarifai.rest.client import ApiError
+from graphos.sources.simple import SimpleDataSource
+from graphos.renderers.gchart import BarChart
 
 from django.db import models
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -24,6 +26,20 @@ class Photo(models.Model):
     thumbnail = models.ImageField(
         upload_to='thumbs', max_length=500, blank=True, null=True)
     concepts = fields.JSONField(blank=True, null=True)
+
+    def concepts_chart(self):
+        # data = [
+        #     ['concept', 'probably'],
+        #     ['dog', 0.4],
+        #     ['cat', 0.7],
+        #     ['animal', 0.99],
+        # ]
+        data = []
+        chart = BarChart(SimpleDataSource(data=data), options={'title': ''})
+        return chart.as_html()
+
+    concepts_chart.short_description = 'Concepts'
+    concepts_chart.allow_tags = True
 
     def image_tag(self):
         """Image tag.
