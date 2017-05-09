@@ -24,16 +24,27 @@ class Photo(models.Model):
     thumbnail = models.ImageField(
         upload_to='thumbs', max_length=500, blank=True, null=True)
 
-    def thumb(self):
-        """Thumbnail as html img element.
+    def image_tag(self):
+        """Image tag.
+        """
+        if self.image:
+            return u'<img src="%s" />' % self.image.url
+        else:
+            return settings.NO_PHOTO_MSG
+
+    image_tag.short_description = 'Preview'
+    image_tag.allow_tags = True
+
+    def thumb_tag(self):
+        """Thumbnail tag.
         """
         if self.thumbnail:
             return '<img src="%s" />' % self.thumbnail.url
         else:
             return settings.NO_PHOTO_MSG
 
-    thumb.short_description = 'Thumb'
-    thumb.allow_tags = True
+    thumb_tag.short_description = 'Thumb'
+    thumb_tag.allow_tags = True
 
     def create_thumbnail(self):
         """Method for creating image thumbnail.
