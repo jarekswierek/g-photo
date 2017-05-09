@@ -132,20 +132,17 @@ STATIC_URL = '/static/'
 SUIT_CONFIG = {
     # header
     'ADMIN_NAME': 'G-Photo',
-
     # menu
     'SEARCH_URL': '',
     'MENU_EXCLUDE': ('auth', 'photos',),
-    # 'MENU': (
-    #     'sites',
-    #     {'app': 'auth', 'icon':'icon-lock', 'models': ('user', 'group')},
-    #     {'label': 'Settings', 'icon':'icon-cog', 'models': ('auth.user', 'auth.group')},
-    #     {'label': 'Support', 'icon':'icon-question-sign', 'url': '/support/'},
-    # ),
-
     # misc
     'LIST_PER_PAGE': 15
 }
 
+# media settings
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# photo settings
+THUMBNAIL_SIZE = (50, 50)
+NO_PHOTO_MSG = '(No photo)'
