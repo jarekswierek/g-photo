@@ -9,14 +9,14 @@ class PhotoAdmin(admin.ModelAdmin):
     """
     list_display = ('thumb_tag', 'name',)
     readonly_fields = ('image_tag', 'concepts_chart')
-    fields = ('name', 'image')
-    update_fields = ('image_tag', 'name', 'image', 'concepts_chart')
 
     def get_form(self, request, obj=None, **kwargs):
         """Set update fields on photo edit.
         """
         if obj and obj.pk:
-            self.fields = self.update_fields
+            self.fields = ('image_tag', 'name', 'image', 'concepts_chart')
+        else:
+            self.fields = ('name', 'image')
         return super(PhotoAdmin, self).get_form(request, obj, **kwargs)
 
 

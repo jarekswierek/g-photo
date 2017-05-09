@@ -28,15 +28,15 @@ class Photo(models.Model):
     concepts = fields.JSONField(blank=True, null=True)
 
     def concepts_chart(self):
-        # data = [
-        #     ['concept', 'probably'],
-        #     ['dog', 0.4],
-        #     ['cat', 0.7],
-        #     ['animal', 0.99],
-        # ]
-        data = []
-        chart = BarChart(SimpleDataSource(data=data), options={'title': ''})
-        return chart.as_html()
+        """Photo concepts chart.
+        """
+        if self.concepts:
+            data = SimpleDataSource(data=self.concepts['data'])
+            options = {'title': '', 'isStacked': 'absolute'}
+            chart = BarChart(data, options=options)
+            return chart.as_html()
+        else:
+            return ''
 
     concepts_chart.short_description = 'Concepts'
     concepts_chart.allow_tags = True
@@ -105,10 +105,12 @@ class Photo(models.Model):
         """Save photo with thumbnail.
         """
         self.create_thumbnail()
-        self.set_photo_concepts()
         super(Photo, self).save()
+        self.save_photo_concepts()
 
     def vision(self):
+        """Get concepts data by Clarifai API.
+        """
         with open('api_keys.json') as data_file:
             credentials = json.load(data_file)
         app_id = credentials['api_key']
@@ -122,18 +124,18 @@ class Photo(models.Model):
             result = []
         return result
 
-    def set_photo_concepts(self):
+    def save_photo_concepts(self):
+        """Save photo concepts in database.
+        """
         result = self.vision()
-        try:
-            status_code = result['status']['code']
-        except KeyError:
-            pass
-        else:
-            if status_code == 10000:
-                try:
-                    concepts = result['outputs'][0]['data']['concepts']
-                except (KeyError, IndexError):
-                    concepts = []
-                concepts_list = [{'name': elem['name'], 'value': elem['value']}
+        if result:
+            try:
+                concepts = result['outputs'][0]['data']['concepts']
+            except (KeyError, IndexError):
+                concepts = []
+            if concepts:
+                header = [['concept', 'probability']]
+                concepts_list = [[elem['name'], float(elem['value'])]
                                  for elem in concepts]
-                self.concepts = {'data': concepts_list}
+                self.concepts = {'data': header + concepts_list}
+                self.save()
