@@ -2,7 +2,7 @@
 
 Web application for computer vision which applies Clarifai API for image recognition.
 
-Build with:
+Built with:
 
 - Python 3.6
 
