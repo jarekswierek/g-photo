@@ -150,3 +150,7 @@ MEDIA_URL = '/media/'
 # photo settings
 THUMBNAIL_SIZE = (50, 50)
 NO_PHOTO_MSG = '(No photo)'
+
+# Clarifai API settings
+CLARIFAI_API_VERSION = 'general-v1.3'
+CLARIFAI_CREDENTIALS_FILE = 'api_keys.json'

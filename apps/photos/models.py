@@ -1,21 +1,11 @@
 # -*- coding: utf-8 -*-
-import os
-import json
-from io import BytesIO
-import threading
-
-from PIL import Image
-from clarifai.rest import ClarifaiApp
-from clarifai.rest import Image as ClImage
-from clarifai.rest.client import ApiError
 from graphos.sources.simple import SimpleDataSource
 from graphos.renderers.gchart import BarChart
 
 from django.db import models
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 
-from . import fields, validators, exceptions
+from . import fields, validators, concepts, threads, thumbnails
 
 
 class Photo(models.Model):
@@ -47,7 +37,7 @@ class Photo(models.Model):
         """Image tag.
         """
         if self.image:
-            return u'<img src="%s" />' % self.image.url
+            return '<img src="{src}" />'.format(src=self.image.url)
         else:
             return settings.NO_PHOTO_MSG
 
@@ -58,88 +48,45 @@ class Photo(models.Model):
         """Thumbnail tag.
         """
         if self.thumbnail:
-            return '<img src="%s" />' % self.thumbnail.url
+            return '<img src="{src}" />'.format(src=self.thumbnail.url)
         else:
             return settings.NO_PHOTO_MSG
 
     thumb_tag.short_description = 'Thumb'
     thumb_tag.allow_tags = True
 
-    def create_thumbnail(self):
-        """Method for creating image thumbnail.
-        """
-        if not self.image.file or not hasattr(self.image.file, 'content_type'):
-            return None
-
-        content_type = self.image.file.content_type
-        if content_type == 'image/jpeg':
-            pil_type = 'jpeg'
-            file_extension = 'jpg'
-        elif content_type == 'image/png':
-            pil_type = 'png'
-            file_extension = 'png'
-        else:
-            raise exceptions.PhotoException('Content type of file not found.')
-
-        # Open original photo which we want to thumbnail using PIL's Image
-        image = Image.open(BytesIO(self.image.read()))
-
-        image.thumbnail(settings.THUMBNAIL_SIZE, Image.ANTIALIAS)
-
-        # Save the thumbnail
-        temp_handle = BytesIO()
-        image.save(temp_handle, pil_type)
-        temp_handle.seek(0)
-
-        # Save image to a SimpleUploadedFile which can be saved into
-        # ImageField
-        suf = SimpleUploadedFile(
-            os.path.split(self.image.name)[-1],
-            temp_handle.read(),
-            content_type=content_type
-        )
-        # Save SimpleUploadedFile into image field
-        filename = '{0}_thumbnail.{1}'.format(
-            os.path.splitext(suf.name)[0], file_extension)
-        self.thumbnail.save(filename, suf, save=False)
-
     def save(self):
         """Save photo with thumbnail.
         """
         self.create_thumbnail()
         super(Photo, self).save()
-        t = threading.Thread(target=self.save_photo_concepts)
-        t.setDaemon(True)
-        t.start()
+        threads.run_background_task(self.save_photo_concepts)
 
-    def vision(self):
-        """Get concepts data by Clarifai API.
+    def create_thumbnail(self):
+        """Create photo thumbnail.
         """
-        with open('api_keys.json') as data_file:
-            credentials = json.load(data_file)
-        app_id = credentials['api_key']
-        app_secret = credentials['api_secret']
-        app = ClarifaiApp(app_id=app_id, app_secret=app_secret)
-        model = app.models.get('general-v1.3')
-        image = ClImage(file_obj=BytesIO(self.image.read()))
-        try:
-            result = model.predict([image])
-        except ApiError:
-            result = []
-        return result
+        if not self.image.file or not hasattr(self.image.file, 'content_type'):
+            return None
+        filename, thumb = thumbnails.get_thumbnail(self.image)
+        self.thumbnail.save(filename, thumb, save=False)
+
+    def get_photo_concepts(self):
+        """Get photo concepts returned by API.
+        """
+        return concepts.photo_concepts(self.image)
 
     def save_photo_concepts(self):
         """Save photo concepts in database.
         """
-        result = self.vision()
-        if result:
+        data = self.get_photo_concepts()
+        if data:
             try:
-                concepts = result['outputs'][0]['data']['concepts']
+                photo_concepts = data['outputs'][0]['data']['concepts']
             except (KeyError, IndexError):
-                concepts = []
-            if concepts:
+                photo_concepts = []
+            if photo_concepts:
                 header = [['concept', 'probability']]
                 concepts_list = [[elem['name'], float(elem['value'])]
-                                 for elem in concepts]
+                                 for elem in photo_concepts]
                 self.concepts = {'data': header + concepts_list}
                 self.save()
