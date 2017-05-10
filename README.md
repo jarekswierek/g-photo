@@ -1,5 +1,9 @@
 # G-Photo
 
+Web application for computer vision which applies Clarifai API for image recognition.
+
+Build with:
+
 - Python 3.6
 
 - Django 1.11
