@@ -2,6 +2,7 @@
 import os
 import json
 from io import BytesIO
+import threading
 
 from PIL import Image
 from clarifai.rest import ClarifaiApp
@@ -36,7 +37,8 @@ class Photo(models.Model):
             chart = BarChart(data, options=options)
             return chart.as_html()
         else:
-            return ''
+            return '(Waiting for an API response. It may take a few seconds. ' \
+                   'Refresh page to see results.)'
 
     concepts_chart.short_description = 'Concepts'
     concepts_chart.allow_tags = True
@@ -106,7 +108,9 @@ class Photo(models.Model):
         """
         self.create_thumbnail()
         super(Photo, self).save()
-        self.save_photo_concepts()
+        t = threading.Thread(target=self.save_photo_concepts)
+        t.setDaemon(True)
+        t.start()
 
     def vision(self):
         """Get concepts data by Clarifai API.
